@@ -5,6 +5,10 @@ set(CMAKE_CXX_STANDARD 23)
 
 find_package(SDL2 REQUIRED)
 
-add_executable(droom main.cpp)
+add_executable(droom main.cpp
+        WAD/Wad.cpp
+        WAD/Wad.h
+        Application.cpp
+        Application.h)
 
 target_link_libraries(droom PRIVATE SDL2::SDL2)
