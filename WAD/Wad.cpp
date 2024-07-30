@@ -120,7 +120,7 @@ std::vector<T> Wad::load_lumps(std::istream &is, const LumpInfo &lump_info) {
     return lumps;
 }
 
-const std::regex MAP_NAME_REGEX{R"(^E(\d+)M(\d+)$)"};
+const std::regex MAP_NAME_REGEX{R"(^(E(\d+)M(\d+))|(MAP(\d+))$)"};
 
 bool is_map_name(const std::string &s) {
     return std::regex_match(s, MAP_NAME_REGEX);
