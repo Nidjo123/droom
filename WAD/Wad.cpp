@@ -55,10 +55,9 @@ std::shared_ptr<Wad> Wad::from_file(std::filesystem::path &path) {
 }
 
 void Wad::load_from_stream(std::istream &is) {
-    auto wad = std::make_shared<Wad>();
-    wad->load_header(is);
-    wad->load_directory(is);
-    wad->load_maps(is);
+    load_header(is);
+    load_directory(is);
+    load_maps(is);
 }
 
 void Wad::load_header(std::istream &is) {
@@ -76,9 +75,10 @@ void Wad::load_directory(std::istream &is) {
 }
 
 void Wad::load_maps(std::istream &is) {
-    for (auto i = 0; i < lump_infos.size(); i++)
-        if (is_map_name(lump_infos[i].name)) {
-            SDL_Log("Loading map %s", lump_infos[i].name.c_str());
+    for (auto i = 0; i < lump_infos.size(); i++) {
+        const auto lump_info = lump_infos[i];
+        if (is_map_name(lump_info.name)) {
+            SDL_Log("Loading map %s", lump_info.name.c_str());
             auto things = load_lumps<Thing>(is, lump_infos[i + 1]);
             SDL_Log("Loaded %zu things", things.size());
             auto linedefs = load_lumps<Linedef>(is, lump_infos[i + 2]);
@@ -95,18 +95,27 @@ void Wad::load_maps(std::istream &is) {
             SDL_Log("Loaded %zu nodes", nodes.size());
             auto sectors = load_lumps<Sector>(is, lump_infos[i + 8]);
             SDL_Log("Loaded %zu sectors", sectors.size());
+
+            maps[std::string{lump_info.name}] = {.things=things,
+                    .linedefs=linedefs,
+                    .sidedefs=sidedefs,
+                    .vertexes=vertexes,
+                    .segs=segs,
+                    .ssectors=ssectors};
+            SDL_Log("Loading map with name %s", lump_info.name.c_str());
         }
+    }
 }
 
 template<typename T>
 std::vector<T> Wad::load_lumps(std::istream &is, const LumpInfo &lump_info) {
     std::vector<T> lumps;
     is.seekg(lump_info.file_pos);
-    for (auto i = 0; i < lump_info.size / sizeof(Thing); i++) {
-        T thing{};
-        is.read(reinterpret_cast<char *>(&thing), sizeof(thing));
+    for (auto i = 0; i < lump_info.size / sizeof(T); i++) {
+        T item{};
+        is.read(reinterpret_cast<char *>(&item), sizeof(item));
         SDL_assert(is.gcount() == sizeof(T));
-        lumps.push_back(thing);
+        lumps.push_back(item);
     }
     return lumps;
 }

@@ -27,6 +27,8 @@ public:
 
     virtual ~SDLApplication();
 
+    virtual void process_event(SDL_Event &event);
+
     void main_loop() override;
 };
 
@@ -34,15 +36,16 @@ class DroomApplication : public SDLApplication {
 public:
     DroomApplication(std::string title, int width, int height, std::filesystem::path &);
 
+    int width() const;
+
+    int height() const;
+
 protected:
     void tick(float delta) override;
 
     void render() override;
 
 protected:
-    const int width_;
-    const int height_;
-
     std::unique_ptr<SDL_Window, std::function<decltype(SDL_DestroyWindow)>> window_;
     std::unique_ptr<SDL_Renderer, std::function<decltype(SDL_DestroyRenderer)>> renderer_;
     std::shared_ptr<Wad> wad_;

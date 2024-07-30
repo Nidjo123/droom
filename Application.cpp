@@ -24,6 +24,7 @@ void SDLApplication::main_loop() {
                 default:
                     break;
             }
+            process_event(event);
         }
 
         const auto tick_time = SDL_GetPerformanceCounter();
@@ -39,8 +40,10 @@ void SDLApplication::main_loop() {
     }
 }
 
-DroomApplication::DroomApplication(std::string title, int width, int height, std::filesystem::path &wad_path)
-        : width_{width}, height_{height} {
+void SDLApplication::process_event(SDL_Event &event) {
+}
+
+DroomApplication::DroomApplication(std::string title, int width, int height, std::filesystem::path &wad_path) {
     window_ = std::unique_ptr<SDL_Window, std::function<decltype(SDL_DestroyWindow)>>(
             SDL_CreateWindow(title.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, 0),
             SDL_DestroyWindow);
@@ -59,7 +62,6 @@ DroomApplication::DroomApplication(std::string title, int width, int height, std
 }
 
 void DroomApplication::tick(float delta) {
-    SDL_Log("Ticks/second: %f", 1.0 / delta);
 }
 
 void DroomApplication::render() {
@@ -67,7 +69,19 @@ void DroomApplication::render() {
     SDL_RenderClear(renderer_.get());
 
     SDL_SetRenderDrawColor(renderer_.get(), 255, 255, 255, SDL_ALPHA_OPAQUE);
-    SDL_RenderDrawLine(renderer_.get(), 0, 0, width_, height_);
-    SDL_RenderDrawLine(renderer_.get(), width_, 0, 0, height_);
+    SDL_RenderDrawLine(renderer_.get(), 0, 0, width(), height());
+    SDL_RenderDrawLine(renderer_.get(), width(), 0, 0, height());
     SDL_RenderPresent(renderer_.get());
+}
+
+int DroomApplication::width() const {
+    int width_;
+    SDL_GetRendererOutputSize(renderer_.get(), &width_, nullptr);
+    return width_;
+}
+
+int DroomApplication::height() const {
+    int height_;
+    SDL_GetRendererOutputSize(renderer_.get(), nullptr, &height_);
+    return height_;
 }

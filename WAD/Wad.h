@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <filesystem>
+#include <map>
 #include <memory>
 #include <vector>
 
@@ -99,12 +100,13 @@ struct Blockmap {
     std::vector<int16_t> offsets;
 };
 
-class Map {
-private:
+struct Map {
     std::vector<Thing> things;
     std::vector<Linedef> linedefs;
     std::vector<Sidedef> sidedefs;
     std::vector<Vertex> vertexes;
+    std::vector<Seg> segs;
+    std::vector<Subsector> ssectors;
 };
 
 class Wad {
@@ -113,8 +115,20 @@ public:
 
     static std::shared_ptr<Wad> from_file(std::filesystem::path &);
 
+    Map get_map(std::string name) const {
+        return maps.at(name);
+    }
+
+    std::vector<std::string> get_map_names() const {
+        std::vector<std::string> map_names;
+        for (const auto &it: maps) {
+            map_names.push_back(it.first);
+        }
+        return map_names;
+    }
+
 private:
-    static void load_from_stream(std::istream &);
+    void load_from_stream(std::istream &);
 
     void load_header(std::istream &);
 
@@ -127,7 +141,7 @@ private:
 
     WadInfo wad_info;
     std::vector<LumpInfo> lump_infos;
-    std::vector<Map> maps;
+    std::map<std::string, Map> maps;
 };
 
 

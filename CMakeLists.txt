@@ -12,3 +12,10 @@ add_executable(droom main.cpp
         Application.h)
 
 target_link_libraries(droom PRIVATE SDL2::SDL2)
+
+add_executable(mapvis WAD/Wad.cpp
+        WAD/Wad.h
+        Application.cpp
+        Application.h
+        MapVisualizer.cpp)
+target_link_libraries(mapvis PRIVATE SDL2::SDL2)
