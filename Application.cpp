@@ -1,3 +1,5 @@
+#include <cstdlib>
+
 #include "Application.h"
 
 
@@ -37,21 +39,35 @@ void SDLApplication::main_loop() {
     }
 }
 
-DroomApplication::DroomApplication(std::string title, int width, int height) : width_{width}, height_{height} {
+DroomApplication::DroomApplication(std::string title, int width, int height, std::filesystem::path &wad_path)
+        : width_{width}, height_{height} {
     window_ = std::unique_ptr<SDL_Window, std::function<decltype(SDL_DestroyWindow)>>(
             SDL_CreateWindow(title.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, 0),
             SDL_DestroyWindow);
+    if (!window_) {
+        SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION, "Failed to create window: %s", SDL_GetError());
+        std::exit(1);
+    }
     renderer_ = std::unique_ptr<SDL_Renderer, std::function<decltype(SDL_DestroyRenderer)>>(
             SDL_CreateRenderer(window_.get(), -1, 0),
             SDL_DestroyRenderer);
+    if (!renderer_) {
+        SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION, "Failed to create renderer: %s", SDL_GetError());
+        std::exit(1);
+    }
+    wad_ = Wad::from_file(wad_path);
 }
 
 void DroomApplication::tick(float delta) {
-
+    SDL_Log("Ticks/second: %f", 1.0 / delta);
 }
 
 void DroomApplication::render() {
+    SDL_SetRenderDrawColor(renderer_.get(), 0, 0, 0, SDL_ALPHA_OPAQUE);
+    SDL_RenderClear(renderer_.get());
 
+    SDL_SetRenderDrawColor(renderer_.get(), 255, 255, 255, SDL_ALPHA_OPAQUE);
+    SDL_RenderDrawLine(renderer_.get(), 0, 0, width_, height_);
+    SDL_RenderDrawLine(renderer_.get(), width_, 0, 0, height_);
+    SDL_RenderPresent(renderer_.get());
 }
-
-
