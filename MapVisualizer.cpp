@@ -15,7 +15,7 @@ public:
 protected:
     void process_event(SDL_Event &event) override {
         if (event.type == SDL_KEYDOWN) {
-            int old_idx = map_idx_;
+            const int old_idx = map_idx_;
             if (event.key.keysym.sym == SDLK_LEFT) {
                 map_idx_ = std::max(0, map_idx_ - 1);
             } else if (event.key.keysym.sym == SDLK_RIGHT) {
@@ -42,14 +42,12 @@ protected:
         const auto min_y = y_range.first->y;
         const auto max_y = y_range.second->y;
 
-        const float x_scale = width() / static_cast<float>(max_x - min_x);
-        const float y_scale = height() / static_cast<float>(max_y - min_y);
+        const float x_scale = (width() - 1) / static_cast<float>(max_x - min_x);
+        const float y_scale = (height() - 1) / static_cast<float>(max_y - min_y);
         const float scale = std::min(x_scale, y_scale);
         for (auto &vertex: vertexes) {
-            vertex.x -= min_x;
-            vertex.y -= min_y;
-            vertex.x *= scale;
-            vertex.y *= scale;
+            vertex.x = (vertex.x - min_x) * scale;
+            vertex.y = (vertex.y - min_y) * scale;
         }
 
         SDL_SetRenderDrawColor(renderer_.get(), 0, 0, 0, SDL_ALPHA_OPAQUE);
@@ -62,7 +60,7 @@ protected:
             SDL_RenderDrawLine(renderer_.get(), start_vertex.x, start_vertex.y, end_vertex.x, end_vertex.y);
         }
 
-        SDL_SetRenderDrawColor(renderer_.get(), 200, 100, 200, SDL_ALPHA_OPAQUE);
+        SDL_SetRenderDrawColor(renderer_.get(), 255, 20, 20, SDL_ALPHA_OPAQUE);
         for (const auto &vertex: vertexes) {
             SDL_RenderDrawPoint(renderer_.get(), vertex.x, vertex.y);
         }
