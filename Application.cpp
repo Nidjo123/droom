@@ -43,14 +43,18 @@ void SDLApplication::main_loop() {
 void SDLApplication::process_event(SDL_Event &event) {
 }
 
-DroomApplication::DroomApplication(std::string title, int width, int height, std::filesystem::path &wad_path) {
+DroomApplication::DroomApplication(std::string title, int window_width, int window_height, int screen_width,
+                                   int screen_height, std::filesystem::path &wad_path)
+        : screen_{screen_width, screen_height} {
     window_ = std::unique_ptr<SDL_Window, std::function<decltype(SDL_DestroyWindow)>>(
-            SDL_CreateWindow(title.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, 0),
+            SDL_CreateWindow(title.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, window_width, window_height,
+                             0),
             SDL_DestroyWindow);
     if (!window_) {
         SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION, "Failed to create window: %s", SDL_GetError());
         std::exit(1);
     }
+
     renderer_ = std::unique_ptr<SDL_Renderer, std::function<decltype(SDL_DestroyRenderer)>>(
             SDL_CreateRenderer(window_.get(), -1, 0),
             SDL_DestroyRenderer);
@@ -58,6 +62,7 @@ DroomApplication::DroomApplication(std::string title, int width, int height, std
         SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION, "Failed to create renderer: %s", SDL_GetError());
         std::exit(1);
     }
+
     wad_ = Wad::from_file(wad_path);
 }
 
@@ -65,13 +70,10 @@ void DroomApplication::tick(float delta) {
 }
 
 void DroomApplication::render() {
-    SDL_SetRenderDrawColor(renderer_.get(), 0, 0, 0, SDL_ALPHA_OPAQUE);
-    SDL_RenderClear(renderer_.get());
-
-    SDL_SetRenderDrawColor(renderer_.get(), 255, 255, 255, SDL_ALPHA_OPAQUE);
-    SDL_RenderDrawLine(renderer_.get(), 0, 0, width(), height());
-    SDL_RenderDrawLine(renderer_.get(), width(), 0, 0, height());
-    SDL_RenderPresent(renderer_.get());
+    screen_.clear(RGBAColor::BLACK);
+    screen_.draw_line(0, 0, screen_.get_width(), screen_.get_height(), RGBAColor::WHITE);
+    screen_.draw_line(screen_.get_width(), 0, 0, screen_.get_height(), RGBAColor::WHITE);
+    screen_.present();
 }
 
 int DroomApplication::width() const {
@@ -84,4 +86,22 @@ int DroomApplication::height() const {
     int height_;
     SDL_GetRendererOutputSize(renderer_.get(), nullptr, &height_);
     return height_;
+}
+
+void DroomApplication::present_screen() {
+    SDL_Renderer *renderer = SDL_GetRenderer(window_.get());
+    SDL_assert(renderer);
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
+    SDL_RenderClear(renderer);
+
+    SDL_SetRenderDrawColor(renderer, 0, 255, 0, SDL_ALPHA_OPAQUE);
+    SDL_RenderDrawLine(renderer, 0, 0, width(), height());
+
+    auto screen_texture = screen_.get_texture(renderer);
+    SDL_assert(screen_texture);
+    if (SDL_RenderCopy(renderer, screen_texture.get(), nullptr, nullptr)) {
+        SDL_Log("Error copying texture: %s", SDL_GetError());
+    }
+
+    SDL_RenderPresent(renderer);
 }

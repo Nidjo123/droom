@@ -7,8 +7,8 @@
 
 class MapVisualizer : public DroomApplication {
 public:
-    MapVisualizer(std::string title, int width, int height, std::filesystem::path &wad_path)
-            : DroomApplication{title, width, height, wad_path}, map_names_{wad_->get_map_names()} {
+    MapVisualizer(const std::string title, int width, int height, std::filesystem::path &wad_path)
+            : DroomApplication{title, width, height, width, height, wad_path}, map_names_{wad_->get_map_names()} {
         std::sort(map_names_.begin(), map_names_.end());
     }
 
@@ -42,30 +42,29 @@ protected:
         const auto min_y = y_range.first->y;
         const auto max_y = y_range.second->y;
 
-        const float x_scale = (width() - 1) / static_cast<float>(max_x - min_x);
-        const float y_scale = (height() - 1) / static_cast<float>(max_y - min_y);
+        const float x_scale = (screen_.get_width() - 1) / static_cast<float>(max_x - min_x);
+        const float y_scale = (screen_.get_height() - 1) / static_cast<float>(max_y - min_y);
         const float scale = std::min(x_scale, y_scale);
         for (auto &vertex: vertexes) {
             vertex.x = (vertex.x - min_x) * scale;
             vertex.y = (vertex.y - min_y) * scale;
         }
 
-        SDL_SetRenderDrawColor(renderer_.get(), 0, 0, 0, SDL_ALPHA_OPAQUE);
-        SDL_RenderClear(renderer_.get());
+        screen_.clear(RGBAColor::BLACK);
 
-        SDL_SetRenderDrawColor(renderer_.get(), 200, 255, 200, SDL_ALPHA_OPAQUE);
+        const RGBAColor line_color = RGBAColor(200, 255, 200);
         for (const auto &linedef: map.linedefs) {
             const auto &start_vertex = vertexes[linedef.start_vertex];
             const auto &end_vertex = vertexes[linedef.end_vertex];
-            SDL_RenderDrawLine(renderer_.get(), start_vertex.x, start_vertex.y, end_vertex.x, end_vertex.y);
+            screen_.draw_line(start_vertex.x, start_vertex.y, end_vertex.x, end_vertex.y, line_color);
         }
 
-        SDL_SetRenderDrawColor(renderer_.get(), 255, 20, 20, SDL_ALPHA_OPAQUE);
+        const RGBAColor vertex_color = RGBAColor(255, 20, 20);
         for (const auto &vertex: vertexes) {
-            SDL_RenderDrawPoint(renderer_.get(), vertex.x, vertex.y);
+            screen_.draw_pixel(vertex.x, vertex.y, vertex_color);
         }
 
-        SDL_RenderPresent(renderer_.get());
+        present_screen();
     }
 
 private:

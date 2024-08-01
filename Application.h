@@ -8,6 +8,7 @@
 #include <SDL.h>
 
 #include "WAD/Wad.h"
+#include "Screen/Screen.h"
 
 
 class Application {
@@ -34,7 +35,8 @@ public:
 
 class DroomApplication : public SDLApplication {
 public:
-    DroomApplication(std::string title, int width, int height, std::filesystem::path &);
+    DroomApplication(std::string title, int window_width, int window_height, int screen_width, int screen_height,
+                     std::filesystem::path &wad_path);
 
     int width() const;
 
@@ -45,9 +47,12 @@ protected:
 
     void render() override;
 
+    void present_screen();
+
 protected:
     std::unique_ptr<SDL_Window, std::function<decltype(SDL_DestroyWindow)>> window_;
     std::unique_ptr<SDL_Renderer, std::function<decltype(SDL_DestroyRenderer)>> renderer_;
+    Screen screen_;
     std::shared_ptr<Wad> wad_;
 };
 
