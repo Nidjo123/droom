@@ -7,7 +7,7 @@
 #include <memory>
 #include <vector>
 
-#include "Palette.h"
+#include "Color.h"
 
 struct WadInfo {
   std::string wad_type;
@@ -142,8 +142,10 @@ class Wad {
 
   WadInfo wad_info_;
   std::vector<LumpInfo> lump_infos_;
-  std::map<std::string, Map> maps_;
   std::vector<Palette> palettes_;
+  std::vector<Colormap> colormaps_;
+  std::map<std::string, Map> maps_;
+  std::string end_text;
 };
 
 bool is_map_name(const std::string &);

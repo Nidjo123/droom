@@ -12,8 +12,8 @@ add_executable(droom main.cpp
         Application.h
         Screen/Screen.cpp
         Screen/Screen.h
-        WAD/Palette.cpp
-        WAD/Palette.h)
+        WAD/Color.cpp
+        WAD/Color.h)
 
 target_link_libraries(droom PRIVATE SDL2::SDL2)
 
@@ -24,6 +24,6 @@ add_executable(mapvis WAD/Wad.cpp
         MapVisualizer.cpp
         Screen/Screen.cpp
         Screen/Screen.h
-        WAD/Palette.cpp
-        WAD/Palette.h)
+        WAD/Color.cpp
+        WAD/Color.h)
 target_link_libraries(mapvis PRIVATE SDL2::SDL2)

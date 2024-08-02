@@ -104,12 +104,29 @@ void Wad::load_lump_data(std::istream &is) {
 	} else if (lump_info.name=="PLAYPAL") {
 	  is.seekg(lump_info.file_pos);
 	  const auto num_palettes = lump_info.size/Palette::BYTES_PER_PALETTE;
-	  for (auto i = 0; i < num_palettes; i++) {
-		Palette palette;
+	  for (auto pal_idx = 0; pal_idx < num_palettes; pal_idx++) {
+		Palette palette{};
 		is >> palette;
 		palettes_.push_back(palette);
 	  }
 	  SDL_Log("Loaded %zu palettes", palettes_.size());
+	} else if (lump_info.name=="COLORMAP") {
+	  is.seekg(lump_info.file_pos);
+	  const auto num_colormaps = lump_info.size/Palette::COLORS_IN_PALETTE;
+	  for (auto colmap_idx = 0; colmap_idx < num_colormaps; colmap_idx++) {
+		Colormap colormap{};
+		is >> colormap;
+		colormaps_.push_back(colormap);
+	  }
+	  SDL_Log("Loaded %zu colormaps", colormaps_.size());
+	} else if (lump_info.name=="ENDOOM") {
+	  is.seekg(lump_info.file_pos);
+	  char *s = new char[lump_info.size];
+	  is.read(s, lump_info.size);
+	  for (auto s_idx = 0; s_idx < lump_info.size; s_idx += 2) {
+		end_text += s[s_idx];
+	  }
+	  delete[] s;
 	}
   }
 }

@@ -3,6 +3,7 @@
 
 #include <array>
 #include <cassert>
+#include <cstdint>
 #include <iostream>
 
 class RGBColor {
@@ -35,5 +36,20 @@ class Palette {
 };
 
 std::istream &operator>>(std::istream &is, Palette &palette);
+
+class Colormap {
+ public:
+  [[nodiscard]] uint8_t operator[](int idx) const {
+	assert(idx >= 0 && idx < Palette::COLORS_IN_PALETTE);
+	return map_[idx];
+  }
+
+ private:
+  std::array<uint8_t, Palette::COLORS_IN_PALETTE> map_;
+
+  friend std::istream &operator>>(std::istream &is, Colormap &colormap);
+};
+
+std::istream &operator>>(std::istream &is, Colormap &colormap);
 
 #endif //DROOM_PALETTE_H
