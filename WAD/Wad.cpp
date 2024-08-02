@@ -121,12 +121,11 @@ void Wad::load_lump_data(std::istream &is) {
 	  SDL_Log("Loaded %zu colormaps", colormaps_.size());
 	} else if (lump_info.name=="ENDOOM") {
 	  is.seekg(lump_info.file_pos);
-	  char *s = new char[lump_info.size];
-	  is.read(s, lump_info.size);
 	  for (auto s_idx = 0; s_idx < lump_info.size; s_idx += 2) {
-		end_text += s[s_idx];
+		char s[2];
+		is.read(s, 2);
+		end_text += s[0];
 	  }
-	  delete[] s;
 	}
   }
 }
