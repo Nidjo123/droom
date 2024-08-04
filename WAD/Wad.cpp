@@ -5,6 +5,11 @@
 #include <fstream>
 #include <regex>
 
+// some basic assumptions
+static_assert(sizeof(uint8_t)==sizeof(char));
+static_assert(sizeof(unsigned char)==sizeof(char));
+static_assert(sizeof(uint8_t)==sizeof(int8_t));
+
 template<typename T>
 std::istream &operator>>(std::istream &is, T &lump) {
   is.read(reinterpret_cast<char *>(&lump), sizeof(lump));
@@ -73,6 +78,9 @@ void Wad::load_directory(std::istream &is) {
 }
 
 void Wad::load_lump_data(std::istream &is) {
+  bool reading_sprites = false;
+  bool reading_flats = false;
+
   for (auto i = 0; i < lump_infos_.size(); i++) {
 	const auto lump_info = lump_infos_[i];
 	if (is_map_name(lump_info.name)) {
@@ -126,8 +134,29 @@ void Wad::load_lump_data(std::istream &is) {
 		is.read(s, 2);
 		end_text += s[0];
 	  }
+	} else if (lump_info.name=="S_START") {
+	  reading_sprites = true;
+	  SDL_assert(lump_info.size==0);
+	} else if (lump_info.name=="S_END") {
+	  reading_sprites = false;
+	  SDL_assert(lump_info.size==0);
+	} else if (lump_info.name=="F_START") {
+	  reading_flats = true;
+	  SDL_assert(lump_info.size==0);
+	} else if (lump_info.name=="F_END") {
+	  reading_flats = false;
+	  SDL_assert(lump_info.size==0);
+	} else if (reading_sprites) {
+	  is.seekg(lump_info.file_pos);
+	  Picture picture;
+	  is >> picture;
+	  sprites_[lump_info.name] = picture;
+	  SDL_Log("Read sprite %s", lump_info.name.c_str());
 	}
   }
+
+  SDL_assert(!reading_sprites);
+  SDL_assert(!reading_flats);
 }
 
 template<typename T>
@@ -147,4 +176,44 @@ const std::regex MAP_NAME_REGEX{R"(^(E(\d+)M(\d+))|(MAP(\d+))$)"};
 
 bool is_map_name(const std::string &s) {
   return std::regex_match(s, MAP_NAME_REGEX);
+}
+
+Picture::Column read_picture_column(std::istream &is) {
+  std::vector<uint8_t> posts;
+  uint8_t start_row = 0;
+  uint8_t num_pixels = 0;
+  while (true) {
+	is.read(reinterpret_cast<char *>(&start_row), 1);
+	assert(is.gcount()==sizeof(start_row));
+	if (start_row==0xFF) {
+	  break;
+	}
+	is.read(reinterpret_cast<char *>(&num_pixels), 1);
+	assert(is.gcount()==sizeof(num_pixels));
+	posts.push_back(start_row);
+	posts.push_back(num_pixels);
+	const auto bytes_to_read = num_pixels + 2;
+	std::vector<uint8_t> post(bytes_to_read);
+	is.read(reinterpret_cast<char *>(&post[0]), bytes_to_read);
+	assert(is.gcount()==bytes_to_read);
+	std::copy(post.begin(), post.end(), std::back_inserter(posts));
+  }
+  return {posts};
+}
+
+std::istream &operator>>(std::istream &is, Picture &picture) {
+  const auto lump_pos = is.tellg();
+  is.read(reinterpret_cast<char *>(&picture.header_), sizeof(Picture::PictureFormat));
+  SDL_assert(is.gcount()==sizeof(Picture::PictureFormat));
+  const auto cols = picture.header_.width;
+  for (auto col_idx = 0; col_idx < cols; col_idx++) {
+	uint32_t col_offset;
+	is.read(reinterpret_cast<char *>(&col_offset), sizeof(col_offset));
+	SDL_assert(is.gcount()==sizeof(col_offset));
+	const auto next_pos = is.tellg();
+	is.seekg(lump_pos + std::streamoff(col_offset));
+	picture.columns_.push_back(read_picture_column(is));
+	is.seekg(next_pos);
+  }
+  return is;
 }
