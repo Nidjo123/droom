@@ -110,8 +110,7 @@ struct Map {
   std::vector<Subsector> ssectors;
 };
 
-class Picture {
- private:
+struct Picture {
   struct PictureFormat {
 	int16_t width;
 	int16_t height;
@@ -120,7 +119,11 @@ class Picture {
   } header_;
 
   struct Column {
-	std::vector<uint8_t> posts;
+	struct Post {
+	  uint8_t top_offset;
+	  std::vector<uint8_t> pixels;
+	};
+	std::vector<Post> posts;
   };
 
   std::vector<Column> columns_;
@@ -147,6 +150,22 @@ class Wad {
 	  map_names.push_back(it.first);
 	}
 	return map_names;
+  }
+
+  const Picture &get_sprite(const std::string &name) {
+	return sprites_[name];
+  }
+
+  const Picture &get_patch(const std::string &name) {
+	return patches_[name];
+  }
+
+  [[nodiscard]] const Colormap &get_colormap(int idx) const {
+	return colormaps_[idx];
+  }
+
+  [[nodiscard]] const Palette &get_palette(int idx) const {
+	return palettes_[idx];
   }
 
  private:

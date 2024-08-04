@@ -71,6 +71,20 @@ void DroomApplication::render() {
   screen_.draw_line(0, 0, screen_.get_width(), screen_.get_height(), RGBAColor::WHITE);
   screen_.draw_line(screen_.get_width(), 0, 0, screen_.get_height(), RGBAColor::WHITE);
   screen_.present();
+
+  const auto palette = wad_->get_palette(0);
+  auto sprite = wad_->get_sprite("SPIDC4C6");
+  for (auto y = 0; y < sprite.columns_.size(); y++) {
+	for (const auto &post : sprite.columns_[y].posts) {
+	  const auto x = post.top_offset;
+	  for (auto xx = 0; xx < post.pixels.size(); xx++) {
+		const auto color = palette[post.pixels[xx]];
+		screen_.draw_pixel(x + xx, y, RGBAColor(color.r, color.g, color.b));
+	  }
+	}
+  }
+
+  present_screen();
 }
 
 int DroomApplication::width() const {

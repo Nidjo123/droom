@@ -193,25 +193,30 @@ bool is_map_name(const std::string &s) {
 }
 
 Picture::Column read_picture_column(std::istream &is) {
-  std::vector<uint8_t> posts;
-  uint8_t start_row = 0;
-  uint8_t num_pixels = 0;
+  std::vector<Picture::Column::Post> posts;
   while (true) {
-	is.read(reinterpret_cast<char *>(&start_row), 1);
-	assert(is.gcount()==sizeof(start_row));
-	if (start_row==0xFF) {
+	Picture::Column::Post post;
+	is.read(reinterpret_cast<char *>(&post.top_offset), sizeof(post.top_offset));
+	assert(is.gcount()==sizeof(post.top_offset));
+	if (post.top_offset==0xFF) {
 	  break;
 	}
-	is.read(reinterpret_cast<char *>(&num_pixels), 1);
+	uint8_t num_pixels = 0;
+	is.read(reinterpret_cast<char *>(&num_pixels), sizeof(num_pixels));
 	assert(is.gcount()==sizeof(num_pixels));
-	posts.push_back(start_row);
-	posts.push_back(num_pixels);
-	const auto bytes_to_read = num_pixels + 2;
-	std::vector<uint8_t> post(bytes_to_read);
-	is.read(reinterpret_cast<char *>(&post[0]), bytes_to_read);
-	assert(is.gcount()==bytes_to_read);
-	std::copy(post.begin(), post.end(), std::back_inserter(posts));
+	post.pixels.resize(num_pixels);
+
+	// skip one byte
+	is.seekg(is.tellg() + std::streamoff{1});
+	is.read(reinterpret_cast<char *>(&post.pixels[0]), num_pixels);
+	assert(is.gcount()==num_pixels);
+
+	// skip another byte
+	is.seekg(is.tellg() + std::streamoff{1});
+
+	posts.push_back(post);
   }
+
   return {posts};
 }
 
@@ -225,7 +230,7 @@ std::istream &operator>>(std::istream &is, Picture &picture) {
 	is.read(reinterpret_cast<char *>(&col_offset), sizeof(col_offset));
 	assert(is.gcount()==sizeof(col_offset));
 	const auto next_pos = is.tellg();
-	is.seekg(lump_pos + std::streamoff(col_offset));
+	is.seekg(lump_pos + std::streamoff{col_offset});
 	picture.columns_.push_back(read_picture_column(is));
 	is.seekg(next_pos);
   }
