@@ -100,13 +100,9 @@ int DroomApplication::height() const {
 }
 
 void DroomApplication::present_screen() {
-  SDL_Renderer *renderer = SDL_GetRenderer(window_.get());
-  SDL_assert(renderer);
+  SDL_Renderer *renderer = renderer_.get();
   SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
   SDL_RenderClear(renderer);
-
-  SDL_SetRenderDrawColor(renderer, 0, 255, 0, SDL_ALPHA_OPAQUE);
-  SDL_RenderDrawLine(renderer, 0, 0, width(), height());
 
   auto screen_texture = screen_.get_texture(renderer);
   SDL_assert(screen_texture);
