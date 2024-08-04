@@ -167,6 +167,7 @@ class Wad {
   std::vector<Colormap> colormaps_;
   std::map<std::string, Map> maps_;
   std::map<std::string, Picture> sprites_;
+  std::map<std::string, Picture> patches_;
   std::string end_text;
 };
 

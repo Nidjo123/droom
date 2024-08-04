@@ -79,6 +79,7 @@ void Wad::load_directory(std::istream &is) {
 
 void Wad::load_lump_data(std::istream &is) {
   bool reading_sprites = false;
+  bool reading_patches = false;
   bool reading_flats = false;
 
   for (auto i = 0; i < lump_infos_.size(); i++) {
@@ -134,6 +135,12 @@ void Wad::load_lump_data(std::istream &is) {
 		is.read(s, 2);
 		end_text += s[0];
 	  }
+	} else if (lump_info.name=="P1_START" || lump_info.name=="P2_START") {
+	  reading_patches = true;
+	  assert(lump_info.size==0);
+	} else if (lump_info.name=="P1_END" || lump_info.name=="P2_END") {
+	  reading_patches = false;
+	  assert(lump_info.size==0);
 	} else if (lump_info.name=="S_START") {
 	  reading_sprites = true;
 	  assert(lump_info.size==0);
@@ -146,16 +153,23 @@ void Wad::load_lump_data(std::istream &is) {
 	} else if (lump_info.name=="F_END") {
 	  reading_flats = false;
 	  assert(lump_info.size==0);
-	} else if (reading_sprites) {
+	} else if (reading_sprites || reading_patches) {
 	  is.seekg(lump_info.file_pos);
 	  Picture picture;
 	  is >> picture;
-	  sprites_[lump_info.name] = picture;
-	  SDL_Log("Read sprite %s", lump_info.name.c_str());
+	  if (reading_sprites) {
+		sprites_[lump_info.name] = picture;
+		SDL_Log("Read sprite %s", lump_info.name.c_str());
+	  } else {
+		assert(reading_patches);
+		patches_[lump_info.name] = picture;
+		SDL_Log("Read patch %s", lump_info.name.c_str());
+	  }
 	}
   }
 
   assert(!reading_sprites);
+  assert(!reading_patches);
   assert(!reading_flats);
 }
 
