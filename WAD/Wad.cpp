@@ -13,7 +13,7 @@ static_assert(sizeof(uint8_t)==sizeof(int8_t));
 template<typename T>
 std::istream &operator>>(std::istream &is, T &lump) {
   is.read(reinterpret_cast<char *>(&lump), sizeof(lump));
-  SDL_assert(is && is.gcount()==sizeof(lump));
+  assert(is && is.gcount()==sizeof(lump));
   return is;
 }
 
@@ -21,25 +21,25 @@ std::istream &operator>>(std::istream &is, WadInfo &wad_info) {
   constexpr int MAGIC_BYTES = 4;
   char magic[MAGIC_BYTES + 1] = {0};
   is.read(magic, MAGIC_BYTES);
-  SDL_assert(is && is.gcount()==MAGIC_BYTES);
+  assert(is && is.gcount()==MAGIC_BYTES);
   wad_info.wad_type = magic;
   is.read(reinterpret_cast<char *>(&wad_info.num_lumps), sizeof(wad_info.num_lumps));
-  SDL_assert(is && is.gcount()==sizeof(wad_info.num_lumps));
+  assert(is && is.gcount()==sizeof(wad_info.num_lumps));
   is.read(reinterpret_cast<char *>(&wad_info.info_table_offset), sizeof(wad_info.info_table_offset));
-  SDL_assert(is && is.gcount()==sizeof(wad_info.info_table_offset));
+  assert(is && is.gcount()==sizeof(wad_info.info_table_offset));
   return is;
 }
 
 std::istream &operator>>(std::istream &is, LumpInfo &lump_info) {
   is.read(reinterpret_cast<char *>(&lump_info.file_pos), sizeof(lump_info.file_pos));
-  SDL_assert(is && is.gcount()==sizeof(lump_info.file_pos));
+  assert(is && is.gcount()==sizeof(lump_info.file_pos));
   is.read(reinterpret_cast<char *>(&lump_info.size), sizeof(lump_info.size));
-  SDL_assert(is && is.gcount()==sizeof(lump_info.size));
+  assert(is && is.gcount()==sizeof(lump_info.size));
   constexpr int NAME_BYTES = 8;
   char name[NAME_BYTES + 1] = {0};
   is.read(name, NAME_BYTES);
   lump_info.name = name;
-  SDL_assert(is && is.gcount()==NAME_BYTES);
+  assert(is && is.gcount()==NAME_BYTES);
   return is;
 }
 
@@ -136,16 +136,16 @@ void Wad::load_lump_data(std::istream &is) {
 	  }
 	} else if (lump_info.name=="S_START") {
 	  reading_sprites = true;
-	  SDL_assert(lump_info.size==0);
+	  assert(lump_info.size==0);
 	} else if (lump_info.name=="S_END") {
 	  reading_sprites = false;
-	  SDL_assert(lump_info.size==0);
+	  assert(lump_info.size==0);
 	} else if (lump_info.name=="F_START") {
 	  reading_flats = true;
-	  SDL_assert(lump_info.size==0);
+	  assert(lump_info.size==0);
 	} else if (lump_info.name=="F_END") {
 	  reading_flats = false;
-	  SDL_assert(lump_info.size==0);
+	  assert(lump_info.size==0);
 	} else if (reading_sprites) {
 	  is.seekg(lump_info.file_pos);
 	  Picture picture;
@@ -155,8 +155,8 @@ void Wad::load_lump_data(std::istream &is) {
 	}
   }
 
-  SDL_assert(!reading_sprites);
-  SDL_assert(!reading_flats);
+  assert(!reading_sprites);
+  assert(!reading_flats);
 }
 
 template<typename T>
@@ -166,7 +166,7 @@ std::vector<T> Wad::load_lumps(std::istream &is, const LumpInfo &lump_info) {
   for (auto i = 0; i < lump_info.size/sizeof(T); i++) {
 	T item{};
 	is.read(reinterpret_cast<char *>(&item), sizeof(item));
-	SDL_assert(is.gcount()==sizeof(T));
+	assert(is.gcount()==sizeof(T));
 	lumps.push_back(item);
   }
   return lumps;
@@ -204,12 +204,12 @@ Picture::Column read_picture_column(std::istream &is) {
 std::istream &operator>>(std::istream &is, Picture &picture) {
   const auto lump_pos = is.tellg();
   is.read(reinterpret_cast<char *>(&picture.header_), sizeof(Picture::PictureFormat));
-  SDL_assert(is.gcount()==sizeof(Picture::PictureFormat));
+  assert(is.gcount()==sizeof(Picture::PictureFormat));
   const auto cols = picture.header_.width;
   for (auto col_idx = 0; col_idx < cols; col_idx++) {
 	uint32_t col_offset;
 	is.read(reinterpret_cast<char *>(&col_offset), sizeof(col_offset));
-	SDL_assert(is.gcount()==sizeof(col_offset));
+	assert(is.gcount()==sizeof(col_offset));
 	const auto next_pos = is.tellg();
 	is.seekg(lump_pos + std::streamoff(col_offset));
 	picture.columns_.push_back(read_picture_column(is));
