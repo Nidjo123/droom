@@ -87,16 +87,16 @@ void DroomApplication::render() {
   present_screen();
 }
 
-int DroomApplication::width() const {
-  int width_;
-  SDL_GetRendererOutputSize(renderer_.get(), &width_, nullptr);
-  return width_;
+int DroomApplication::get_width() const {
+  int width;
+  SDL_GetRendererOutputSize(renderer_.get(), &width, nullptr);
+  return width;
 }
 
-int DroomApplication::height() const {
-  int height_;
-  SDL_GetRendererOutputSize(renderer_.get(), nullptr, &height_);
-  return height_;
+int DroomApplication::get_height() const {
+  int height;
+  SDL_GetRendererOutputSize(renderer_.get(), nullptr, &height);
+  return height;
 }
 
 void DroomApplication::present_screen() {

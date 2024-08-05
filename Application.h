@@ -36,9 +36,9 @@ class DroomApplication : public SDLApplication {
   DroomApplication(std::string title, int window_width, int window_height, int screen_width, int screen_height,
 				   std::filesystem::path &wad_path);
 
-  int width() const;
+  int get_width() const;
 
-  int height() const;
+  int get_height() const;
 
  protected:
   void tick(float delta) override;
